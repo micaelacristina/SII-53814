@@ -34,5 +34,6 @@ void Esfera::Dibuja()
 
 void Esfera::Mueve(float t)
 {
-
+	centro.x +=velocidad.x*t; //lo mismo q la raqueta, solo que en la esfera tomamos como ptos de referencia el centro
+	centro.y +=velocidad.y*t;
 }
