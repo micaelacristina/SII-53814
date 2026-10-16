@@ -27,6 +27,8 @@ public:
 	void OnTimer(int value);
 	void OnDraw();	
 
+	int fd_tennis; //descriptor de tenis
+
 	Esfera esfera;
 	std::vector<Plano> paredes;
 	Plano fondo_izq;

@@ -10,6 +10,10 @@
 #include <string.h>
 #include <math.h>
 
+//librerias sacadas de logger para leer las funciones de open read y write, etc
+
+#include <fcntl.h> 
+#include <unistd.h>
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -21,7 +25,8 @@ CMundo::CMundo()
 
 CMundo::~CMundo()
 {
-
+	//cerramos FIFO y completamos el cto
+	close (fd_tennis); 
 }
 
 void CMundo::InitGL()
@@ -119,6 +124,8 @@ void CMundo::OnTimer(int value)
 	jugador2.Mueve(0.025f);
 	esfera.Mueve(0.025f);
 	int i;
+	//como en el read de la FIFO, espcaio donde se guarda el msj que enivaremos al logger
+	char buffer[1024];
 	for(i=0;i<paredes.size();i++)
 	{
 		paredes[i].Rebota(esfera);
@@ -135,6 +142,16 @@ void CMundo::OnTimer(int value)
 		esfera.velocidad.x=2+2*rand()/(float)RAND_MAX;
 		esfera.velocidad.y=2+2*rand()/(float)RAND_MAX;
 		puntos2++;
+		
+		//Contador de puntos y write de tuberia
+		// Guardamos en el  buffer el mensaje que enviaremos  al logger a traves de la FIFO
+		sprintf(buffer, "Jugador 2 marca 1 punto, lleva %d puntos\n", puntos2);
+		write(fd_tennis,buffer, strlen(buffer)+1); // no ponemos 1024 pq no sabemos cuanto ocupa el buffer realmente, entonces usamos el strlen(buffer)
+
+		//Cuando J2 llega a 3 ptos se termina el programa
+		if (puntos2==3){
+		  exit(0);
+		}
 	}
 
 	if(fondo_dcho.Rebota(esfera))
@@ -144,7 +161,17 @@ void CMundo::OnTimer(int value)
 		esfera.velocidad.x=-2-2*rand()/(float)RAND_MAX;
 		esfera.velocidad.y=-2-2*rand()/(float)RAND_MAX;
 		puntos1++;
+
+		//Contador y write
+		sprintf(buffer, "Jugador 1 marca 1 punto, lleva %d puntos\n", puntos1);
+		//write(fd_tennis, buffer, strlen(buffer)+1); //añadimos el +1 para q no genere basura, y nos imprima el /0
+		write(fd_tennis, buffer, 1024);
+		
+		if (puntos1==3){
+		  exit(0);
+		}
 	}
+
 
 }
 
@@ -192,4 +219,7 @@ void CMundo::Init()
 	jugador2.g=0;
 	jugador2.x1=6;jugador2.y1=-1;
 	jugador2.x2=6;jugador2.y2=1;
+
+	//apertura de FIFO en Mundo
+	fd_tennis=open("FIFO", O_WRONLY); //al reves q en el logger, ya q alli se lee y aqui se escribe
 }
